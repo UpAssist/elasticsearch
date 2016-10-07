@@ -1,6 +1,36 @@
-FROM elasticsearch:1.7.5
+#
+# Elasticsearch Dockerfile
+#
+# https://github.com/dockerfile/elasticsearch
+#
 
-#RUN echo -e 'script.groovy.sandbox.class_whitelist: java.util.LinkedHashMap\nscript.groovy.sandbox.receiver_whitelist:  java.util.Iterator, java.lang.Object, java.util.Map, java.util.Map$Entry\nnetwork.bind_host: 127.0.0.1' >> /etc/elasticsearch/elasticsearch.yml
-COPY ./conf/elasticsearch.yml /etc/elasticsearch/elasticsearch.yml
+# Pull base image.
+FROM openjdk:7
 
-RUN service elasticsearch restart
+ENV ES_PKG_NAME elasticsearch-1.7.5
+
+# Install Elasticsearch.
+RUN \
+  cd / && \
+  wget https://download.elasticsearch.org/elasticsearch/elasticsearch/$ES_PKG_NAME.tar.gz && \
+  tar xvzf $ES_PKG_NAME.tar.gz && \
+  rm -f $ES_PKG_NAME.tar.gz && \
+  mv /$ES_PKG_NAME /elasticsearch
+
+# Define mountable directories.
+VOLUME ["/data"]
+
+# Mount elasticsearch.yml config
+ADD conf/elasticsearch.yml /elasticsearch/config/elasticsearch.yml
+
+# Define working directory.
+WORKDIR /data
+
+# Define default command.
+CMD ["/elasticsearch/bin/elasticsearch"]
+
+# Expose ports.
+#   - 9200: HTTP
+#   - 9300: transport
+EXPOSE 9200
+EXPOSE 9300
